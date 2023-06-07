@@ -28,6 +28,12 @@ function reducer(state, {type, payload}) {
           ...state,
           currentOperand: `${state.currentOperand || ""}${payload.operation}`
         }
+      } else if (payload.operation == "-") {
+        console.log('Clicked -')
+        return {
+          ...state,
+          currentOperand: `${state.currentOperand || ""}${payload.operation}`
+        }
       }
   }
 }
