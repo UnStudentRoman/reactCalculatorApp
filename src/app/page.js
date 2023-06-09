@@ -17,8 +17,13 @@ export const ACTIONS = {
 function reducer(state, {type, payload}) {
   switch (type) {
     case ACTIONS.ADD_DIGIT:
-      console.log(state.currentOperand)
-      console.log(typeof state.currentOperand)
+      if (state.overwrite) {
+        return {
+          ...state,
+          currentOperand: payload.digit,
+          overwrite: false,
+        }
+      }
       if (payload.digit == "0" && state.currentOperand == "0") return state
       if (payload.digit == "." && (state.currentOperand || "").includes(".")) return state
       return {
@@ -27,39 +32,36 @@ function reducer(state, {type, payload}) {
       }
     
     case ACTIONS.CHOOSE_OPERATION:
-      console.log(state.currentOperand)
-      console.log(typeof state.currentOperand)
-      if (state.currentOperand == null && state.previousOperand == null) {
+      if (state.currentOperand == "" && state.previousOperand == "") {
         return state
       }
 
-      if (state.previousOperand == null) {
+      if (state.previousOperand == "") {
         return {
           ...state,
           previousOperand: state.currentOperand,
-          currentOperand: null,
+          currentOperand: "",
           operation: payload.operation
         }
       }
 
-      if (state.currentOperand == null) {
+      if (state.currentOperand == "") {
         return {
           ...state,
           operation: payload.operation,
         }
       }
-    return {
-      ...state,
-      previousOperand: evaluate(state),
-      currentOperand: "",
-      operation: payload.operation,
-    }
+
+      return {
+        ...state,
+        previousOperand: evaluate(state),
+        currentOperand: "",
+        operation: payload.operation,
+      }
 
 
     case ACTIONS.DELETE_DIGIT:
       if (state.currentOperand == "") return state
-      console.log(state.currentOperand)
-      console.log(typeof state.currentOperand)
       return {
         ...state,
         currentOperand: `${state.currentOperand.slice(0, -1)}`,
@@ -70,6 +72,19 @@ function reducer(state, {type, payload}) {
         ...state,
         currentOperand: "",
         previousOperand: "",
+        operation: "",
+      }
+    
+    case ACTIONS.EVALUATE:
+      if (state.operation == "" || state.currentOperand == "" || state.previousOperand == "") {
+        return state
+      }
+
+      return {
+        ...state,
+        overwrite: true,
+        previousOperand: "",
+        currentOperand: evaluate(state),
         operation: "",
       }
 
@@ -104,7 +119,7 @@ function evaluate( { currentOperand, previousOperand, operation }) {
 
 function Home() {
 
-  const [{currentOperand, previousOperand, operation}, dispatch] = useReducer(reducer, {})
+  const [{currentOperand, previousOperand, operation}, dispatch] = useReducer(reducer, {currentOperand:"", previousOperand:"", operation:""})
 
   return (
     <main className={styles.main}>
@@ -131,7 +146,7 @@ function Home() {
         <OperationButton operation="-" dispatch={dispatch} />
         <DigitButton digit="." dispatch={dispatch} />
         <DigitButton digit="0" dispatch={dispatch} />
-        <button className={styles.span_two} >=</button>
+        <button className={styles.span_two} onClick={() => dispatch({type: ACTIONS.EVALUATE})}>=</button>
       </div>
     </main>
   )
